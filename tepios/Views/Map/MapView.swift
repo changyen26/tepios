@@ -160,8 +160,9 @@ struct MapView: View {
                 .font(.system(size: 18))
                 .foregroundColor(AppTheme.gold)
 
-            TextField("搜尋廟宇...", text: $searchText)
+            TextField("", text: $searchText, prompt: Text("搜尋廟宇...").foregroundColor(.gray.opacity(0.6)))
                 .font(.system(size: AppTheme.FontSize.callout))
+                .foregroundColor(.black)
                 .focused($isSearchFocused)
                 .submitLabel(.search)
                 .onSubmit {

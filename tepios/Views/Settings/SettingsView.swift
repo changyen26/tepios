@@ -14,7 +14,6 @@ struct SettingsView: View {
     @State private var alertMessage = ""
     @State private var showAmuletBinding = false
     @State private var showLogoutConfirmation = false
-    @State private var showResetConfirmation = false
 
     // MARK: - Mock Data
 
@@ -42,12 +41,6 @@ struct SettingsView: View {
             icon: "gearshape.fill",
             title: "其他",
             description: "更多設定選項"
-        ),
-        SettingOption(
-            id: "reset",
-            icon: "arrow.counterclockwise.circle.fill",
-            title: "重置資料",
-            description: "清除所有資料並重新載入假資料"
         ),
         SettingOption(
             id: "logout",
@@ -102,19 +95,6 @@ struct SettingsView: View {
         } message: {
             Text(alertMessage)
         }
-        .alert("確認重置", isPresented: $showResetConfirmation) {
-            Button("取消", role: .cancel) { }
-            Button("重置", role: .destructive) {
-                // 清除 UserDefaults 中的用戶資料
-                UserDefaults.standard.removeObject(forKey: "savedUser")
-                // 重新載入 ViewModel（會載入新的假資料）
-                userViewModel.logout()
-                alertMessage = "資料已重置！請重新啟動 App 以載入新資料"
-                showingAlert = true
-            }
-        } message: {
-            Text("這將清除所有資料並重新載入假資料，確定要繼續嗎？")
-        }
         .alert("確認登出", isPresented: $showLogoutConfirmation) {
             Button("取消", role: .cancel) { }
             Button("登出", role: .destructive) {
@@ -156,8 +136,6 @@ struct SettingsView: View {
         switch option.id {
         case "bind":
             showAmuletBinding = true
-        case "reset":
-            showResetConfirmation = true
         case "logout":
             showLogoutConfirmation = true
         default:

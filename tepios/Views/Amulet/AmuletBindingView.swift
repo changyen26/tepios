@@ -275,7 +275,7 @@ struct AmuletBindingView: View {
                 .foregroundColor(.white)
 
             // 輸入框
-            TextField("請輸入平安符編號", text: $manualCode)
+            TextField("", text: $manualCode, prompt: Text("請輸入平安符編號").foregroundColor(.white.opacity(0.6)))
                 .font(.system(size: AppTheme.FontSize.body))
                 .foregroundColor(.white)
                 .padding(AppTheme.Spacing.lg)

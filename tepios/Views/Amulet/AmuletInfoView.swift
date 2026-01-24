@@ -12,7 +12,7 @@ struct AmuletInfoView: View {
     @State private var showBindAmulet = false
     @State private var showHistory = false
     @State private var currentIndex = 0
-    @State private var amuletRotation: Double = 0
+    @State private var cardRotation: Double = 0
 
     // MARK: - Computed Properties
 
@@ -37,10 +37,31 @@ struct AmuletInfoView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: AppTheme.Spacing.xl) {
-                            // 平安符卡片（可滑動）
+                            // 平安符卡片（可左右滑動）
+                            TabView(selection: $currentIndex) {
+                                ForEach(Array(userViewModel.user.amulets.enumerated()), id: \.element.id) { index, amulet in
+                                    amuletCardSection(amulet)
+                                        .tag(index)
+                                }
+                            }
+                            .tabViewStyle(.page(indexDisplayMode: .always))
+                            .indexViewStyle(.page(backgroundDisplayMode: .always))
+                            .frame(height: 280)
+                            .padding(.top, AppTheme.Spacing.sm)
+                            .onChange(of: currentIndex) { _, _ in
+                                // 切換卡片時重置旋轉
+                                cardRotation = 0
+                            }
+
+                            // 當前平安符資訊
                             if let amulet = currentAmulet {
-                                amuletCardSection(amulet)
-                                    .padding(.top, AppTheme.Spacing.xl)
+                                // 等級資訊
+                                levelInfoSection(amulet)
+                                    .padding(.horizontal, AppTheme.Spacing.xl)
+
+                                // 綁定日期
+                                bindDateSection(amulet)
+                                    .padding(.horizontal, AppTheme.Spacing.xl)
 
                                 // 福報值進度
                                 meritProgressSection(amulet)
@@ -65,6 +86,12 @@ struct AmuletInfoView: View {
                     }
                 }
             }
+            .task {
+                // 啟動卡片 Y 軸 360 度旋轉動畫
+                withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+                    cardRotation = 360
+                }
+            }
             .navigationTitle("平安符")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -82,91 +109,177 @@ struct AmuletInfoView: View {
             .fullScreenCover(isPresented: $showHistory) {
                 AmuletHistoryView()
             }
-            .onAppear {
-                // 啟動平安符旋轉動畫
-                withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
-                    amuletRotation = 360
-                }
-            }
         }
     }
 
     // MARK: - Components
 
-    /// 平安符卡片區域
+    /// 平安符卡片區域（Y 軸 360 度旋轉）
     private func amuletCardSection(_ amulet: Amulet) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            // 主卡片
-            RoundedRectangle(cornerRadius: 24)
-                .fill(
-                    LinearGradient(
-                        colors: [Color(hex: "BDA138"), Color(hex: "D4B756")],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+        cardFrontSide(amulet)
+            .rotation3DEffect(
+                .degrees(cardRotation),
+                axis: (x: 0, y: 1, z: 0),
+                perspective: 0.5
+            )
+    }
+
+    /// 卡片正面
+    private func cardFrontSide(_ amulet: Amulet) -> some View {
+        // 主卡片
+        RoundedRectangle(cornerRadius: 18)
+            .fill(
+                LinearGradient(
+                    colors: [Color(hex: "BDA138"), Color(hex: "D4B756")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
-                .frame(width: 280, height: 380)
-                .shadow(color: AppTheme.gold.opacity(0.6), radius: 30, x: 0, y: 15)
-                .overlay(
-                    // 平安符圖片和文字
-                    VStack(spacing: AppTheme.Spacing.lg) {
-                        Spacer()
+            )
+            .frame(width: 210, height: 280)
+            .shadow(color: AppTheme.gold.opacity(0.6), radius: 20, x: 0, y: 10)
+            .overlay(
+                // 平安符圖案
+                VStack(spacing: AppTheme.Spacing.sm) {
+                    Spacer()
 
-                        Image("amulet_image")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 120, height: 120)
-                            .rotationEffect(.degrees(amuletRotation))
+                    Image(systemName: "scroll.fill")
+                        .font(.system(size: 70))
+                        .foregroundColor(Color.black.opacity(0.8))
 
-                        Text("平安符")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(Color.black)
+                    Text("平安符")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(Color.black)
 
-                        Spacer()
-                    }
+                    Spacer()
+                }
+            )
+    }
+
+    /// 卡片背面
+    private func cardBackSide(_ amulet: Amulet) -> some View {
+        RoundedRectangle(cornerRadius: 18)
+            .fill(
+                LinearGradient(
+                    colors: [Color(hex: "8B7335"), Color(hex: "A68A4A")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
+            )
+            .frame(width: 210, height: 280)
+            .shadow(color: AppTheme.gold.opacity(0.6), radius: 20, x: 0, y: 10)
+            .overlay(
+                VStack(spacing: AppTheme.Spacing.sm) {
+                    // 廟宇名稱
+                    Text(amulet.templeName)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.top, AppTheme.Spacing.md)
 
-            // 等級標籤（左下角）
-            HStack(spacing: 0) {
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.goldGradient)
-                        .frame(width: 80, height: 80)
-                        .shadow(color: AppTheme.gold.opacity(0.5), radius: 10)
+                    Divider()
+                        .background(Color.white.opacity(0.3))
+                        .padding(.horizontal, AppTheme.Spacing.sm)
 
-                    VStack(spacing: 2) {
-                        Text("Lv")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AppTheme.dark)
-
-                        Text("\(amulet.level)")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(AppTheme.dark)
+                    // 詳細資訊
+                    VStack(spacing: 8) {
+                        infoRow(label: "等級", value: "Lv.\(amulet.level)")
+                        infoRow(label: "稱號", value: getLevelTitle(amulet.level))
+                        infoRow(label: "當前福報", value: "\(amulet.currentPoints)")
+                        infoRow(label: "累積福報", value: "\(amulet.totalPoints)")
+                        infoRow(label: "綁定日期", value: formatDate(amulet.bindDate))
                     }
+                    .padding(.horizontal, AppTheme.Spacing.sm)
+
+                    Spacer()
                 }
-                .offset(x: -20, y: 20)
+            )
+    }
 
-                // 右側資訊
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("當前等級")
-                        .font(.system(size: AppTheme.FontSize.caption))
-                        .foregroundColor(.white.opacity(0.8))
+    /// 資訊行
+    private func infoRow(label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: AppTheme.FontSize.callout))
+                .foregroundColor(.white.opacity(0.8))
 
-                    Text(getLevelTitle(amulet.level))
-                        .font(.system(size: AppTheme.FontSize.title3, weight: .bold))
-                        .foregroundColor(AppTheme.gold)
+            Spacer()
 
-                    Text("再累積 100 點升級")
-                        .font(.system(size: AppTheme.FontSize.caption))
-                        .foregroundColor(.white.opacity(0.6))
-                }
-                .padding(.leading, AppTheme.Spacing.md)
-                .offset(y: 20)
-
-                Spacer()
-            }
-            .frame(width: 280)
+            Text(value)
+                .font(.system(size: AppTheme.FontSize.callout, weight: .semibold))
+                .foregroundColor(.white)
         }
+    }
+
+    /// 等級資訊區域
+    private func levelInfoSection(_ amulet: Amulet) -> some View {
+        HStack(spacing: AppTheme.Spacing.md) {
+            // 等級圓圈
+            ZStack {
+                Circle()
+                    .fill(AppTheme.goldGradient)
+                    .frame(width: 55, height: 55)
+                    .shadow(color: AppTheme.gold.opacity(0.4), radius: 8)
+
+                VStack(spacing: 2) {
+                    Text("Lv")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(AppTheme.dark)
+
+                    Text("\(amulet.level)")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(AppTheme.dark)
+                }
+            }
+
+            // 等級資訊
+            VStack(alignment: .leading, spacing: 4) {
+                Text(getLevelTitle(amulet.level))
+                    .font(.system(size: AppTheme.FontSize.headline, weight: .bold))
+                    .foregroundColor(AppTheme.gold)
+
+                Text("再累積 100 點升級")
+                    .font(.system(size: AppTheme.FontSize.caption))
+                    .foregroundColor(.white.opacity(0.6))
+            }
+
+            Spacer()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
+                        .stroke(AppTheme.gold.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+
+    /// 綁定日期區域
+    private func bindDateSection(_ amulet: Amulet) -> some View {
+        HStack {
+            Image(systemName: "calendar")
+                .font(.system(size: 16))
+                .foregroundColor(AppTheme.gold)
+
+            Text("綁定日期：")
+                .font(.system(size: AppTheme.FontSize.callout))
+                .foregroundColor(.white.opacity(0.7))
+
+            Text(formatDate(amulet.bindDate))
+                .font(.system(size: AppTheme.FontSize.callout, weight: .semibold))
+                .foregroundColor(AppTheme.gold)
+
+            Spacer()
+        }
+        .padding(AppTheme.Spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
+                        .stroke(AppTheme.gold.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 
     /// 福報值進度區域
@@ -269,12 +382,9 @@ struct AmuletInfoView: View {
     /// 空狀態
     private var emptyState: some View {
         VStack(spacing: AppTheme.Spacing.xl) {
-            Image("amulet_image")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 150, height: 150)
-                .opacity(0.3)
-                .rotationEffect(.degrees(amuletRotation))
+            Image(systemName: "scroll")
+                .font(.system(size: 100))
+                .foregroundColor(.white.opacity(0.3))
 
             VStack(spacing: AppTheme.Spacing.sm) {
                 Text("尚未綁定平安符")
@@ -307,6 +417,12 @@ struct AmuletInfoView: View {
         default:
             return "初階信徒"
         }
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd"
+        return formatter.string(from: date)
     }
 }
 

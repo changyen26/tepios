@@ -17,11 +17,17 @@ struct CheckInSheetView: View {
     // MARK: - State
 
     @State private var notes = ""
+    @State private var showPrayerAnimation = false
+    @State private var prayerProgress: Double = 0
     @State private var showSuccessAnimation = false
     @State private var earnedPoints = 0
     @State private var unlockedAchievements: [Achievement] = []
     @State private var showAchievementUnlocked = false
     @State private var currentAchievementIndex = 0
+    @State private var prayerTimer: Timer?
+    @State private var showErrorAlert = false
+    @State private var errorMessage = ""
+    @State private var showDonation = false
     @FocusState private var isNotesFieldFocused: Bool
 
     // MARK: - Body
@@ -34,6 +40,8 @@ struct CheckInSheetView: View {
 
             if showSuccessAnimation {
                 successView
+            } else if showPrayerAnimation {
+                prayerAnimationView
             } else {
                 formView
             }
@@ -60,6 +68,14 @@ struct CheckInSheetView: View {
                 .transition(.opacity)
                 .zIndex(100)
             }
+        }
+        .alert("打卡失敗", isPresented: $showErrorAlert) {
+            Button("確定", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
+        .fullScreenCover(isPresented: $showDonation) {
+            DonationView()
         }
     }
 
@@ -129,24 +145,35 @@ struct CheckInSheetView: View {
                         .font(.system(size: AppTheme.FontSize.callout, weight: .semibold))
                         .foregroundColor(AppTheme.gold)
 
-                    TextEditor(text: $notes)
-                        .font(.system(size: AppTheme.FontSize.body))
-                        .foregroundColor(.white)
-                        .frame(height: 100)
-                        .padding(AppTheme.Spacing.md)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
-                                .fill(Color.white.opacity(0.05))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
-                                        .stroke(
-                                            isNotesFieldFocused ? AppTheme.gold : AppTheme.gold.opacity(0.3),
-                                            lineWidth: isNotesFieldFocused ? 2 : 1
-                                        )
-                                )
-                        )
-                        .focused($isNotesFieldFocused)
-                        .scrollContentBackground(.hidden)
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $notes)
+                            .font(.system(size: AppTheme.FontSize.body))
+                            .foregroundColor(.white)
+                            .frame(height: 100)
+                            .padding(AppTheme.Spacing.md)
+                            .background(
+                                RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
+                                    .fill(Color.white.opacity(0.05))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
+                                            .stroke(
+                                                isNotesFieldFocused ? AppTheme.gold : AppTheme.gold.opacity(0.3),
+                                                lineWidth: isNotesFieldFocused ? 2 : 1
+                                            )
+                                    )
+                            )
+                            .focused($isNotesFieldFocused)
+                            .scrollContentBackground(.hidden)
+
+                        if notes.isEmpty && !isNotesFieldFocused {
+                            Text("分享您的祈福心得或祝福語...")
+                                .font(.system(size: AppTheme.FontSize.body))
+                                .foregroundColor(.white.opacity(0.6))
+                                .padding(.horizontal, AppTheme.Spacing.md + 4)
+                                .padding(.vertical, AppTheme.Spacing.md + 8)
+                                .allowsHitTesting(false)
+                        }
+                    }
 
                     Text("分享您的祈福心得或祝福語")
                         .font(.system(size: AppTheme.FontSize.caption))
@@ -309,17 +336,34 @@ struct CheckInSheetView: View {
 
             Spacer()
 
-            // 完成按鈕
-            Button(action: {
-                dismiss()
-            }) {
-                Text("完成")
-                    .font(.system(size: AppTheme.FontSize.headline, weight: .bold))
+            // 香油錢捐款提示
+            VStack(spacing: AppTheme.Spacing.md) {
+                // 捐款按鈕
+                Button(action: {
+                    showDonation = true
+                }) {
+                    HStack {
+                        Image(systemName: "hands.sparkles.fill")
+                        Text("捐香油錢")
+                            .font(.system(size: AppTheme.FontSize.headline, weight: .bold))
+                    }
                     .foregroundColor(AppTheme.dark)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(AppTheme.goldGradient)
                     .cornerRadius(AppTheme.CornerRadius.md)
+                }
+
+                // 暫不捐款按鈕
+                Button(action: {
+                    dismiss()
+                }) {
+                    Text("暫不捐款")
+                        .font(.system(size: AppTheme.FontSize.callout, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.8))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 48)
+                }
             }
             .padding(.horizontal, AppTheme.Spacing.xl)
             .padding(.bottom, AppTheme.Spacing.xxl)
@@ -328,12 +372,104 @@ struct CheckInSheetView: View {
         }
     }
 
+    // MARK: - Prayer Animation View
+
+    private var prayerAnimationView: some View {
+        VStack(spacing: AppTheme.Spacing.xxxl) {
+            Spacer()
+
+            // 標題
+            Text("祈福加持中...")
+                .font(.system(size: AppTheme.FontSize.title2, weight: .bold))
+                .foregroundColor(AppTheme.gold)
+                .tracking(2)
+
+            // 彩虹圓環進度條
+            ZStack {
+                // 背景圓環
+                Circle()
+                    .stroke(
+                        Color.white.opacity(0.1),
+                        lineWidth: 12
+                    )
+                    .frame(width: 280, height: 280)
+
+                // 進度圓環 - 彩虹漸層
+                Circle()
+                    .trim(from: 0, to: prayerProgress / 100)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [
+                                Color(hex: "FF6B6B"),
+                                Color(hex: "FFD93D"),
+                                Color(hex: "6BCF7F"),
+                                Color(hex: "4D96FF"),
+                                Color(hex: "A084DC"),
+                                Color(hex: "FF6B6B")
+                            ]),
+                            center: .center,
+                            startAngle: .degrees(0),
+                            endAngle: .degrees(360)
+                        ),
+                        style: StrokeStyle(
+                            lineWidth: 12,
+                            lineCap: .round
+                        )
+                    )
+                    .frame(width: 280, height: 280)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 0.1), value: prayerProgress)
+
+                // 中心香爐圖案
+                VStack(spacing: AppTheme.Spacing.md) {
+                    // 香爐圖標
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 80))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color(hex: "FF6B6B"), Color(hex: "FFD93D")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .shadow(
+                            color: Color.orange.opacity(0.6),
+                            radius: 20,
+                            x: 0,
+                            y: 10
+                        )
+                        .scaleEffect(1.0 + sin(prayerProgress * 0.1) * 0.05)
+                        .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: prayerProgress)
+
+                    // 百分比
+                    Text("\(Int(prayerProgress))%")
+                        .font(.system(size: AppTheme.FontSize.title1, weight: .bold))
+                        .foregroundColor(AppTheme.gold)
+                }
+            }
+
+            // 提示文字
+            Text("請保持虔誠的心")
+                .font(.system(size: AppTheme.FontSize.body))
+                .foregroundColor(AppTheme.whiteAlpha06)
+
+            Spacer()
+        }
+    }
+
     // MARK: - Methods
 
     private func performCheckIn() {
+        // 檢查是否有位置資訊
         guard let userLocation = locationManager.location else {
+            errorMessage = "無法取得您的位置\n\n請確認已開啟定位權限，或使用位置模擬器測試"
+            showErrorAlert = true
+            print("❌ 打卡失敗：無法取得位置")
             return
         }
+
+        print("📍 用戶位置: \(userLocation.coordinate.latitude), \(userLocation.coordinate.longitude)")
+        print("🏛️ 廟宇位置: \(temple.latitude), \(temple.longitude)")
 
         let result = templeViewModel.performCheckIn(
             at: temple,
@@ -341,7 +477,10 @@ struct CheckInSheetView: View {
             notes: notes
         )
 
-        if result.isValid {
+        switch result {
+        case .success:
+            print("✅ 打卡成功")
+
             // 取得獲得的福報值
             if let lastCheckIn = templeViewModel.checkInRecords.last {
                 earnedPoints = lastCheckIn.earnedPoints
@@ -350,16 +489,43 @@ struct CheckInSheetView: View {
             // 檢查是否有新解鎖的成就
             unlockedAchievements = templeViewModel.getNewlyUnlockedAchievements()
 
-            // 顯示成功動畫
+            // 先顯示祈福加持動畫
             withAnimation {
-                showSuccessAnimation = true
+                showPrayerAnimation = true
             }
 
-            // 如果有新成就，延遲顯示
-            if !unlockedAchievements.isEmpty {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    currentAchievementIndex = 0
-                    showAchievementUnlocked = true
+            // 開始祈福進度動畫
+            startPrayerProgress()
+
+        case .failure(let reason):
+            // 打卡驗證失敗
+            errorMessage = reason
+            showErrorAlert = true
+            print("❌ 打卡驗證失敗: \(reason)")
+        }
+    }
+
+    private func startPrayerProgress() {
+        prayerProgress = 0
+        prayerTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { _ in
+            if prayerProgress < 100 {
+                prayerProgress += 1
+            } else {
+                prayerTimer?.invalidate()
+                // 祈福完成後顯示成功頁面
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation {
+                        showPrayerAnimation = false
+                        showSuccessAnimation = true
+                    }
+
+                    // 如果有新成就，延遲顯示
+                    if !unlockedAchievements.isEmpty {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            currentAchievementIndex = 0
+                            showAchievementUnlocked = true
+                        }
+                    }
                 }
             }
         }

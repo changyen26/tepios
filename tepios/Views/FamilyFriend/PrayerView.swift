@@ -225,12 +225,13 @@ struct PrayerView: View {
                 .foregroundColor(.white)
 
             ZStack(alignment: .topLeading) {
-                if prayerMessage.isEmpty {
+                if prayerMessage.isEmpty && !isMessageFocused {
                     Text("寫下您的祝福...")
                         .font(.system(size: AppTheme.FontSize.body))
-                        .foregroundColor(.white.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.6))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 16)
+                        .allowsHitTesting(false)
                 }
 
                 TextEditor(text: $prayerMessage)

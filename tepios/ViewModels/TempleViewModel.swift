@@ -8,6 +8,10 @@ import CoreLocation
 import Combine
 
 class TempleViewModel: ObservableObject {
+    // MARK: - Singleton
+
+    static let shared = TempleViewModel()
+
     // MARK: - Published Properties
 
     @Published var temples: [Temple] = []
@@ -47,6 +51,14 @@ class TempleViewModel: ObservableObject {
             self.temples = Temple.mockTemples
             saveTemples()
         }
+    }
+
+    /// 強制重新載入 mock 廟宇資料（開發用）
+    func resetToMockTemples() {
+        print("🔄 重置廟宇資料到最新 mockTemples")
+        self.temples = Temple.mockTemples
+        saveTemples()
+        print("✅ 廟宇資料已重置，共 \(temples.count) 間廟宇")
     }
 
     /// 儲存廟宇資料

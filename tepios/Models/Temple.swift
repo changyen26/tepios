@@ -246,8 +246,8 @@ extension Temple {
             description: "台灣玄天上帝信仰總本山",
             address: "南投縣名間鄉松山村松山街118號",
             phoneNumber: "049-258-1008",
-            latitude: 23.83183,
-            longitude: 120.63094,
+            latitude: 23.8318,
+            longitude: 120.6313,
             deity: Deity.xuanTian,
             openingHours: OpeningHours(
                 weekdayStart: "05:00",
@@ -261,6 +261,69 @@ extension Temple {
             features: ["玄天上帝總廟", "國家三級古蹟", "建築宏偉", "靈驗著稱"],
             checkInRadius: 100.0,
             blessPoints: 30
+        ),
+        Temple(
+            name: "白河三官寶殿",
+            description: "守護白河350年的三界公爐",
+            address: "臺南市白河區外角里4鄰外角41號",
+            phoneNumber: "06-6855022",
+            latitude: 23.34989,
+            longitude: 120.41820,
+            deity: Deity.sanGuan,
+            openingHours: OpeningHours(
+                weekdayStart: "06:00",
+                weekdayEnd: "21:00",
+                weekendStart: "06:00",
+                weekendEnd: "21:00"
+            ),
+            images: ["temple_sanguan"],
+            introduction: "白河三官寶殿，又稱外角仔三官寶殿，主祀三官大帝，擁有350年歷史的「三界公爐」為鎮殿之寶。",
+            history: "明末永曆15年（1662年），鎮殿之寶「三界公爐」從福建漳州府隨鄭成功軍隊來台，坐落於急水溪畔，守護白河350餘年。正殿於民國43年（1954年）重建。",
+            features: ["三界公爐", "350年歷史", "賜福赦罪", "地方信仰中心"],
+            checkInRadius: 100.0,
+            blessPoints: 18
+        ),
+        Temple(
+            name: "白河店仔口福安宮",
+            description: "白河地區媽祖信仰中心",
+            address: "台南市白河區中山路124號",
+            phoneNumber: "06-6852317",
+            latitude: 23.35089,
+            longitude: 120.41600,
+            deity: Deity.mazu,
+            openingHours: OpeningHours(
+                weekdayStart: "06:00",
+                weekdayEnd: "21:00",
+                weekendStart: "06:00",
+                weekendEnd: "21:00"
+            ),
+            images: ["temple_fuan"],
+            introduction: "白河店仔口福安宮，主祀天上聖母媽祖，為白河地區重要的媽祖信仰中心，香火鼎盛。",
+            history: "福安宮歷史悠久，庇佑白河地區居民，是當地重要的信仰中心。",
+            features: ["媽祖信仰", "地方守護", "香火鼎盛", "平安祈福"],
+            checkInRadius: 100.0,
+            blessPoints: 15
+        ),
+        Temple(
+            name: "霧峰南天宮",
+            description: "阿罩霧媽祖廟，霧峰林家媽祖",
+            address: "台中市霧峰區萊園路57巷2號",
+            phoneNumber: "04-2330-2864",
+            latitude: 24.06311,
+            longitude: 120.7012952,
+            deity: Deity.mazu,
+            openingHours: OpeningHours(
+                weekdayStart: "06:00",
+                weekdayEnd: "21:00",
+                weekendStart: "06:00",
+                weekendEnd: "21:00"
+            ),
+            images: ["temple_nantian"],
+            introduction: "霧峰南天宮，俗稱阿罩霧媽祖廟，主祀天上聖母，與霧峰林家有深厚淵源，為台中霧峰地區重要的媽祖信仰中心。",
+            history: "創建於清同治二年（1863年），當時林文察為陸路提督，從漳州奉請天上聖母金尊庇護隨行，後供奉於此，至今已有160餘年歷史。媽祖神尊見證了霧峰林家的興盛與台灣近代史的發展。",
+            features: ["阿罩霧媽祖", "霧峰林家", "歷史悠久", "文化資產"],
+            checkInRadius: 100.0,
+            blessPoints: 20
         )
     ]
 }

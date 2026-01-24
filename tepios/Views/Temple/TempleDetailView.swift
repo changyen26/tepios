@@ -19,6 +19,7 @@ struct TempleDetailView: View {
     // MARK: - State
 
     @State private var showCheckInSheet = false
+    @State private var showDonation = false
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var alertTitle = "提示"
@@ -110,6 +111,9 @@ struct TempleDetailView: View {
                 templeViewModel: templeViewModel,
                 locationManager: locationManager
             )
+        }
+        .fullScreenCover(isPresented: $showDonation) {
+            DonationView()
         }
         .alert(alertTitle, isPresented: $showAlert) {
             Button("確定", role: .cancel) { }
@@ -398,6 +402,36 @@ struct TempleDetailView: View {
 
     private var bottomActions: some View {
         VStack(spacing: AppTheme.Spacing.md) {
+            // 捐款按鈕
+            Button(action: {
+                showDonation = true
+            }) {
+                HStack {
+                    Image(systemName: "hands.sparkles.fill")
+                        .font(.system(size: 20))
+
+                    Text("捐香油錢")
+                        .font(.system(size: AppTheme.FontSize.headline, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(
+                    LinearGradient(
+                        colors: [Color(hex: "4CAF50"), Color(hex: "45A049")],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(AppTheme.CornerRadius.md)
+                .shadow(
+                    color: Color(hex: "4CAF50").opacity(0.3),
+                    radius: 12,
+                    x: 0,
+                    y: 4
+                )
+            }
+
             // 導航按鈕
             Button(action: openMaps) {
                 HStack {

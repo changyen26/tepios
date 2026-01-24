@@ -16,10 +16,8 @@ struct CloudPassportView: View {
     @State private var showEvents = false
     @State private var showLightLamp = false
     @State private var showCardCollection = false
-    @State private var showAllAmulets = false
-    @State private var showBindAmulet = false
-    @State private var selectedAmulet: Amulet?
-    @State private var amuletRotation: Double = 0
+    @State private var showDonation = false
+    @State private var showNearbyTemples = false
 
     // MARK: - Body
 
@@ -46,10 +44,6 @@ struct CloudPassportView: View {
 
                         // 快速操作按鈕
                         quickActionsSection
-                            .padding(.horizontal, AppTheme.Spacing.xl)
-
-                        // 我的平安符
-                        amuletsSection
                             .padding(.horizontal, AppTheme.Spacing.xl)
 
                         // 服務功能區域
@@ -86,20 +80,14 @@ struct CloudPassportView: View {
             .fullScreenCover(isPresented: $showCardCollection) {
                 CardCollectionView()
             }
-            .fullScreenCover(isPresented: $showAllAmulets) {
-                AmuletInfoView()
+            .fullScreenCover(isPresented: $showCheckIn) {
+                CheckInOptionsView()
             }
-            .sheet(isPresented: $showBindAmulet) {
-                AmuletBindingView()
+            .fullScreenCover(isPresented: $showDonation) {
+                DonationView()
             }
-            .sheet(item: $selectedAmulet) { amulet in
-                AmuletDetailSheet(amulet: amulet)
-            }
-            .onAppear {
-                // 啟動平安符旋轉動畫
-                withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
-                    amuletRotation = 360
-                }
+            .fullScreenCover(isPresented: $showNearbyTemples) {
+                NearbyTemplesView()
             }
         }
     }
@@ -306,7 +294,7 @@ struct CloudPassportView: View {
                     title: "找廟宇",
                     color: .blue
                 ) {
-                    // Navigate to map
+                    showNearbyTemples = true
                 }
 
                 quickActionButton(
@@ -344,141 +332,6 @@ struct CloudPassportView: View {
                     .fill(Color.white.opacity(0.1))
             )
         }
-    }
-
-    /// 我的平安符區域
-    private var amuletsSection: some View {
-        VStack(spacing: AppTheme.Spacing.md) {
-            HStack {
-                Text("我的平安符")
-                    .font(.system(size: AppTheme.FontSize.headline, weight: .bold))
-                    .foregroundColor(.white)
-                Spacer()
-
-                if !userViewModel.user.amulets.isEmpty {
-                    Button(action: { showAllAmulets = true }) {
-                        HStack(spacing: 4) {
-                            Text("查看全部")
-                                .font(.system(size: AppTheme.FontSize.caption, weight: .medium))
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12))
-                        }
-                        .foregroundColor(AppTheme.gold)
-                    }
-                }
-            }
-
-            if userViewModel.user.amulets.isEmpty {
-                // 空狀態
-                emptyAmuletCard
-            } else {
-                // 顯示前3個平安符
-                VStack(spacing: AppTheme.Spacing.sm) {
-                    ForEach(userViewModel.user.amulets.prefix(3)) { amulet in
-                        compactAmuletCard(amulet)
-                            .onTapGesture {
-                                selectedAmulet = amulet
-                            }
-                    }
-                }
-            }
-        }
-    }
-
-    /// 空狀態平安符卡片
-    private var emptyAmuletCard: some View {
-        Button(action: { showBindAmulet = true }) {
-            VStack(spacing: AppTheme.Spacing.md) {
-                Image("amulet_image")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .opacity(0.5)
-                    .rotationEffect(.degrees(amuletRotation))
-
-                VStack(spacing: 4) {
-                    Text("尚未綁定平安符")
-                        .font(.system(size: AppTheme.FontSize.callout, weight: .semibold))
-                        .foregroundColor(.white)
-
-                    Text("點擊綁定您的第一個平安符")
-                        .font(.system(size: AppTheme.FontSize.caption2))
-                        .foregroundColor(.white.opacity(0.6))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, AppTheme.Spacing.xl)
-            .background(
-                RoundedRectangle(cornerRadius: AppTheme.CornerRadius.lg)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppTheme.CornerRadius.lg)
-                            .strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
-                            .foregroundColor(AppTheme.gold.opacity(0.3))
-                    )
-            )
-        }
-    }
-
-    /// 精簡平安符卡片
-    private func compactAmuletCard(_ amulet: Amulet) -> some View {
-        HStack(spacing: AppTheme.Spacing.md) {
-            // 平安符圖片（旋轉動畫）
-            ZStack {
-                Circle()
-                    .fill(AppTheme.gold.opacity(0.2))
-                    .frame(width: 50, height: 50)
-
-                Image("amulet_image")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 40, height: 40)
-                    .rotationEffect(.degrees(amuletRotation))
-            }
-
-            // 平安符資訊
-            VStack(alignment: .leading, spacing: 4) {
-                Text(amulet.templeName)
-                    .font(.system(size: AppTheme.FontSize.callout, weight: .bold))
-                    .foregroundColor(.white)
-
-                Text("等級 \(amulet.level)")
-                    .font(.system(size: AppTheme.FontSize.caption))
-                    .foregroundColor(AppTheme.gold)
-            }
-
-            Spacer()
-
-            // 福報值進度
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("\(amulet.currentPoints)/100")
-                    .font(.system(size: AppTheme.FontSize.caption, weight: .semibold))
-                    .foregroundColor(.white)
-
-                // 迷你進度條
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.white.opacity(0.2))
-                            .frame(height: 4)
-
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(AppTheme.goldGradient)
-                            .frame(width: geometry.size.width * CGFloat(min(amulet.currentPoints, 100)) / 100.0, height: 4)
-                    }
-                }
-                .frame(width: 60, height: 4)
-            }
-        }
-        .padding(AppTheme.Spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
-                .fill(Color.white.opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppTheme.CornerRadius.md)
-                        .stroke(AppTheme.gold.opacity(0.3), lineWidth: 1)
-                )
-        )
     }
 
     /// 服務功能區域
@@ -536,6 +389,16 @@ struct CloudPassportView: View {
                     color: "9C27B0"
                 ) {
                     showCardCollection = true
+                }
+
+                // 香油錢捐款
+                serviceCard(
+                    icon: "creditcard.fill",
+                    title: "香油錢",
+                    description: "行動支付捐款",
+                    color: "4CAF50"
+                ) {
+                    showDonation = true
                 }
             }
         }

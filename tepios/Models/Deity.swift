@@ -95,6 +95,16 @@ extension Deity {
         attributes: ["功名", "學業", "智慧"]
     )
 
+    static let sanGuan = Deity(
+        id: "sanguan",
+        name: "三官大帝",
+        displayName: "三官大帝",
+        description: "三官大帝為天官、地官、水官，天官賜福、地官赦罪、水官解厄，庇佑眾生福祿壽喜",
+        iconName: "sparkles",
+        color: "#7C3AED", // 紫色
+        attributes: ["賜福", "赦罪", "解厄"]
+    )
+
     // 所有預設神明列表
     static let allDeities: [Deity] = [
         xuanTian,
@@ -102,6 +112,7 @@ extension Deity {
         guanGong,
         guanyin,
         tuDiGong,
-        wenchang
+        wenchang,
+        sanGuan
     ]
 }

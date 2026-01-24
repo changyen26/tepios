@@ -89,7 +89,7 @@ struct AddFriendView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.white.opacity(0.6))
 
-                TextField("輸入用戶 ID 或暱稱", text: $searchText)
+                TextField("", text: $searchText, prompt: Text("輸入用戶 ID 或暱稱").foregroundColor(.white.opacity(0.6)))
                     .font(.system(size: AppTheme.FontSize.body))
                     .foregroundColor(.white)
                     .autocorrectionDisabled()

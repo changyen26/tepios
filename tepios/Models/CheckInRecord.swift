@@ -245,10 +245,10 @@ struct CheckInValidator {
             }
         }
 
-        // 3. 檢查廟宇是否開放
-        if !temple.openingHours.isOpenNow() {
-            return .failure(reason: "此廟宇目前未開放\n開放時間：\(temple.openingHours.displayText)")
-        }
+        // 3. 檢查廟宇是否開放（已開放全時段打卡）
+        // if !temple.openingHours.isOpenNow() {
+        //     return .failure(reason: "此廟宇目前未開放\n開放時間：\(temple.openingHours.displayText)")
+        // }
 
         return .success
     }

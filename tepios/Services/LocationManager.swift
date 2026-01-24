@@ -8,16 +8,24 @@ import CoreLocation
 import Combine
 
 class LocationManager: NSObject, ObservableObject {
+    // MARK: - Singleton
+
+    static let shared = LocationManager()
+
     // MARK: - Published Properties
 
     @Published var location: CLLocation?
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
     @Published var isLocationEnabled = false
     @Published var errorMessage: String?
+    @Published var isSimulationMode = false
 
     // MARK: - Properties
 
     private let locationManager = CLLocationManager()
+
+    // 模擬位置資料
+    private var simulatedLocation: CLLocation?
 
     // MARK: - Initialization
 
@@ -72,6 +80,42 @@ class LocationManager: NSObject, ObservableObject {
         }
     }
 
+    // MARK: - Simulation Methods (開發用)
+
+    /// 啟用模擬模式並設定位置（開發測試用）
+    func enableSimulationMode(latitude: Double, longitude: Double) {
+        isSimulationMode = true
+        simulatedLocation = CLLocation(latitude: latitude, longitude: longitude)
+        location = simulatedLocation
+        errorMessage = nil
+        isLocationEnabled = true
+    }
+
+    /// 快速設定到特定廟宇附近（開發測試用）
+    func simulateLocationNearTemple(_ templeName: String) {
+        switch templeName {
+        case "台北行天宮":
+            enableSimulationMode(latitude: 25.0630, longitude: 121.5334)
+        case "龍山寺":
+            enableSimulationMode(latitude: 25.0370, longitude: 121.5000)
+        case "關渡宮":
+            enableSimulationMode(latitude: 25.1177, longitude: 121.4649)
+        case "南投受天宮":
+            enableSimulationMode(latitude: 23.8318, longitude: 120.6313)
+        default:
+            // 預設使用台北行天宮
+            enableSimulationMode(latitude: 25.0630, longitude: 121.5334)
+        }
+    }
+
+    /// 關閉模擬模式，恢復真實定位
+    func disableSimulationMode() {
+        isSimulationMode = false
+        simulatedLocation = nil
+        location = nil
+        requestLocationPermission()
+    }
+
     // MARK: - Private Methods
 
     private func checkLocationAuthorization() {
@@ -94,6 +138,8 @@ class LocationManager: NSObject, ObservableObject {
 
 extension LocationManager: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        // 如果在模擬模式下，不更新真實位置
+        guard !isSimulationMode else { return }
         guard let location = locations.last else { return }
         self.location = location
     }

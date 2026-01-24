@@ -194,7 +194,7 @@ struct LightLampCreateView: View {
                         .foregroundColor(AppTheme.whiteAlpha08)
                 }
 
-                TextField("請輸入姓名", text: $beneficiaryName)
+                TextField("", text: $beneficiaryName, prompt: Text("請輸入姓名").foregroundColor(.white.opacity(0.6)))
                     .font(.system(size: AppTheme.FontSize.body))
                     .foregroundColor(.white)
                     .padding(AppTheme.Spacing.lg)
@@ -291,12 +291,13 @@ struct LightLampCreateView: View {
                 }
 
                 ZStack(alignment: .topLeading) {
-                    if purpose.isEmpty {
+                    if purpose.isEmpty && focusedField != .purpose {
                         Text("請輸入祈福目的\n例：祈求事業順利、身體健康")
                             .font(.system(size: AppTheme.FontSize.body))
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(.white.opacity(0.6))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
+                            .allowsHitTesting(false)
                     }
 
                     TextEditor(text: $purpose)
