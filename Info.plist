@@ -28,6 +28,13 @@
 	<string>我們需要您的位置以顯示附近的廟宇</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>我們需要存取您的相簿以選擇頭像照片</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	<key>NFCReaderUsageDescription</key>
+	<string>我們需要使用 NFC 來掃描平安符</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
